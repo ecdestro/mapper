@@ -1,11 +1,12 @@
 from tkinter import *
 from tkinter import filedialog
+import os, sys
 
 # Define grid dimensions
 rows = 20
 cols = 20
 cell_size = 20  # Size of each cell in pixels
-location = ""
+currentFile = False
 
 def newFile():
     clear_grid()
@@ -14,6 +15,8 @@ def newFile():
 
 def openFile():
     location = filedialog.askopenfile(title = "Open", initialdir = ".", defaultextension = "*.txt", filetypes = (("Text files", "*.txt"), ("All files", "*.*")))
+    global currentFile
+    currentFile = os.path.split(location)[1]
     try:
         pass
     except AttributeError:
@@ -26,22 +29,24 @@ def saveFile():
             for row in grid:
                 rowString = ",".join(map(str, row))
                 file.write(rowString + "\n")
+        global currentFile
+        currentFile = os.path.split(location)[1]
         file.close()
     except FileNotFoundError:
         print("No File Selected")
 
 def updateFile():
-    if location == "":
-        try:
-            saveFile()
-        except FileNotFoundError:
-            print("No File Selected")
-    else:    
-        with open(location,"w") as file:
+    if currentFile:
+        with open(currentFile,"w") as file:
             for row in grid:
                 rowString = ",".join(map(str, row))
                 file.write(rowString + "\n")
         file.close()
+    else:
+        try:
+            saveFile()
+        except FileNotFoundError:
+            print("No File Selected")
 
 def draw_cell(col, row):
     x0 = col * cell_size
@@ -58,7 +63,7 @@ def toggle_cell(event):
     row = event.y // cell_size
     grid[row][col] = 1 - grid[row][col]
     draw_cell(col, row)
-    update_text_widget()
+    # update_text_widget()
 
 grid = [[0 for _ in range(cols)] for _ in range(rows)]
 
@@ -74,17 +79,17 @@ def draw_grid():
             else:
                 canvas.create_rectangle(x0, y0, x1, y1, outline="gray", fill="white")
 
-def update_text_widget():
-    text_widget.delete(1.0, END)  # Clear the current text
-    for row in grid:
-        text_widget.insert(END, " ".join(map(str, row)) + "\n")  # Add each row to the Text widget
+# def update_text_widget():
+#     text_widget.delete(1.0, END)  # Clear the current text
+#     for row in grid:
+#         text_widget.insert(END, " ".join(map(str, row)) + "\n")  # Add each row to the Text widget
 
 def clear_grid():
     # Reset all the values in the list of arrays to 0
     for row in range(rows):
         for col in range(cols):
             grid[row][col] = 0
-    update_text_widget()
+    # update_text_widget()
     draw_grid()
 
 root = Tk()
@@ -93,14 +98,14 @@ root.title("Mapper")
 canvas = Canvas(root, width=cols * cell_size, height=rows * cell_size)
 canvas.pack(side=LEFT)
 
-text_widget = Text(root, width=cols * 2, height=rows)
-text_widget.pack(side=RIGHT, padx=10)
+# text_widget = Text(root, width=cols * 2, height=rows)
+# text_widget.pack(side=RIGHT, padx=10)
 
 draw_grid()
 
 canvas.bind("<Button-1>", toggle_cell)
 
-update_text_widget()
+# update_text_widget()
 
 menuBar = Menu(root)
 
